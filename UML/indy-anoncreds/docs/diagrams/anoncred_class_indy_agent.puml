@@ -1,0 +1,45 @@
+@startuml
+
+package  anoncreds.repo {
+
+interface PublicRepo
+interface AttributesRepo
+
+}
+
+
+
+package  anoncreds {
+
+class Issuer
+class Prover
+class Verifier
+
+
+}
+
+package  indy.anoncreds {
+
+Issuer <|-- IndyIssuer
+Prover <|-- IndyProver
+Verifier <|-- IndyVerifier
+
+PublicRepo <|-- IndyPublicRepo
+}
+
+package  indy.agent #DDDDDD {
+
+AgentIssuer o--IndyIssuer
+AgentProver o--IndyProver
+AgentVerifier o--IndyVerifier
+
+AgentIssuer <|-- Walleted
+AgentProver <|-- Walleted
+AgentVerifier <|-- Walleted
+Walleted <|-- WalletedAgent
+Agent <|-- WalletedAgent
+
+}
+
+
+@enduml

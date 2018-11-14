@@ -1,0 +1,74 @@
+@startuml
+skinparam ParticipantPadding 20
+skinparam BoxPadding 20
+
+title VON Claim Definition Loading
+
+
+
+participant "Ledger" as Ledger
+box "BC Registry"
+actor "Issuer" as I
+participant "DB" as DB
+endbox
+
+
+box "TheOrgBook"
+  actor "Holder" as H
+  actor "Prover" as P
+endbox
+
+box "VON Loader"
+  actor "User" as U
+endbox
+
+actor "Verifier" as V
+
+
+note over Ledger, U
+- The claim loading cycle posts:
+  -- one initial claim-hello from Issuer to Prover (=holder for us), then, for each claim,
+  -- one claim-create, user to Issuer,
+  -- and one claim-store, Issuer to Prover/holder for each claim
+endnote
+
+
+=== Claim Comms Check ==
+
+I -> H: <claim-hello>
+H -> I: <how-you-doin?>
+
+=== Claim Issuing (Bulk Load) ==
+group Bulk Load
+  U -> DB: Get List of Current Claim candidates
+  DB -> U: List Returned <bulk claim data>
+end group
+
+loop for each Claim
+  U -> U: AssembleClaimData()
+  U -> I: CreateAndIssueClaim(payload)
+  I -> Ledger: Indy send claim request
+  Ledger -> I: Indy <update revoc reg>, <claim>
+  I -> U: <Claim>
+  U -> H: StoreClaim(Claim)
+  H -> H: storeClaim
+  H -> U: <ClaimID>
+end
+
+
+=== Claim Retrieval and Proof ==
+
+note over Ledger, V
+Basic proving of the full claim. No need to select particular
+attributes to include/exclude.
+endnote
+
+P -> H: GetClaim(ClaimID)
+H -> P: <Claim>
+P -> V: ProveClaim(Claim)
+activate V
+  V -> V: Indy Verification magic
+  V -> P: <ReceiveProof>
+destroy V
+
+@enduml
